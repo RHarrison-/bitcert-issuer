@@ -88,7 +88,7 @@ func CreateTransaction(privKey string, paymentAddress string, satoshis int64, tx
 	return SignedTx, nil
 }
 
-func main() {
+func test() {
 	address := "myPqMJLLgXxAWsXXHec5waTJwR9G5EdqKq"
 	privKey := "cS1L8sc7RD2FXUUXeevmaM4NRp3HxAECuTdBdVqxiHK5t4FSuyvi"
 	input_txHash := "d7bf58a5a3a52623a20e7627aa9f3241528d9be8e622ec9be14e4586862018fe"
