@@ -1,8 +1,8 @@
 package main
 
 import (
-	"fmt"
 	"encoding/json"
+	"fmt"
 	"io/ioutil"
 	"os"
 	"os/user"
@@ -19,7 +19,7 @@ type createTransactionStruct struct {
 	address string `json:"address"`
 	privKey string `json:"privKey"`
 
-	UTXO 	string `json:"UTXO"`
+	UTXO string `json:"UTXO"`
 }
 
 type returnable struct {
@@ -30,28 +30,26 @@ type returnable struct {
 func handleMessages(_ *astilectron.Window, m bootstrap.MessageIn) (payload interface{}, err error) {
 
 	switch m.Name {
-		case "createTx":
-			var data map[string]interface{}
-			if len(m.Payload) > 0 {
-				// Unmarshal payload
-				if err = json.Unmarshal(m.Payload, &data); err != nil {
-					payload = err.Error()
-					return
-				}
-			}
-
-			address := data["address"].(string)
-			privKey := data["privKey"].(string)
-			UTXO := data["UTXO"].(string)
-
-			if payload, err = CreateTransaction(privKey, address, 27000000, UTXO);err != nil {
+	case "createTx":
+		var data map[string]interface{}
+		if len(m.Payload) > 0 {
+			// Unmarshal payload
+			if err = json.Unmarshal(m.Payload, &data); err != nil {
 				payload = err.Error()
 				return
-			}		
-			
-			
-		default: 
-			fmt.Println("fucntion not defined: " + m.Name)
+			}
+		}
+
+		address := data["address"].(string)
+		privKey := data["privKey"].(string)
+
+		if payload, err = CreateTransaction(privKey, address); err != nil {
+			payload = err.Error()
+			return
+		}
+
+	default:
+		fmt.Println("fucntion not defined: " + m.Name)
 
 	}
 	return
