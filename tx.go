@@ -6,6 +6,8 @@ import (
 	"fmt"
 	"log"
 
+	"github.com/d4l3k/go-electrum/electrum"
+
 	"github.com/btcsuite/btcd/chaincfg"
 	"github.com/btcsuite/btcd/chaincfg/chainhash"
 	"github.com/btcsuite/btcd/txscript"
@@ -36,14 +38,23 @@ func (tx Transaction) addOutput(amount int64, address string) {
 	}
 	script, _ := txscript.PayToAddrScript(destinationAddress)
 	tx.util.AddTxOut(wire.NewTxOut(amount, script))
-	tx.util.AddTxOut(wire.NewTxOut(0, opReturnScript([]byte("reece you bloody stud you"))))
+	tx.util.AddTxOut(wire.NewTxOut(0, opReturnScript([]byte("another example"))))
 
 }
 
+func getUTXO(address string) []*electrum.Transaction {
+	return net.UTXO(address)
+}
+
+func calculateFee(blocks int) int {
+	fee := net.estimateFee(blocks)
+	return fee
+}
+
 // addInput adds a new Input to a bitcoin transaction
-func (tx Transaction) addInput() {
-	hash, _ := chainhash.NewHashFromStr("d8d6414a8a42e04761247f8ad41e73f2f77c961123341643759fb5954f746883") // TODO(Reece) need to get UTXO using electrum
-	prevOut := wire.NewOutPoint(hash, 0)
+func (tx Transaction) addInput(UTXO electrum.Transaction) {
+	hash, _ := chainhash.NewHashFromStr(UTXO.Hash) // TODO(Reece) need to get UTXO using electrum
+	prevOut := wire.NewOutPoint(hash, uint32(UTXO.Pos))
 	redeemTxIn := wire.NewTxIn(prevOut, nil, nil)
 	tx.util.AddTxIn(redeemTxIn)
 }
@@ -80,14 +91,18 @@ func (tx Transaction) Sign(privKey string, destAddr string) {
 // }
 
 // Create a new transaction and return the final transaction hex ready to broadcast
-func CreateTransaction(privKey string, paymentAddress string) (string, error) {
+func CreateTransaction(wallet Wallet) (string, error) {
 	var tx Transaction
 	tx.util = wire.NewMsgTx(wire.TxVersion)
 
-	tx.addInput()
-	tx.addOutput(90532339, paymentAddress)
+	utxoArray := getUTXO(wallet.address)
+	fee := calculateFee(3)
+	outputAmount := utxoArray[0].Value - fee
 
-	tx.Sign(privKey, paymentAddress)
+	tx.addInput(*utxoArray[0])
+	tx.addOutput(int64(outputAmount), wallet.address)
+
+	tx.Sign(wallet.key, wallet.address)
 
 	var signedTx bytes.Buffer
 	tx.util.Serialize(&signedTx)
@@ -97,10 +112,9 @@ func CreateTransaction(privKey string, paymentAddress string) (string, error) {
 }
 
 func test() {
-	address := "mzq1guetvcVB1Cqpu7UNXb7Y3Kcme47z7x"
-	privKey := "cSATNwZACSQ2Zk24Fzts2RbmV3LU2JBiz8QVhT8DxqV9cxPK43it"
+	wallet, _ := getUsableWallet()
 
-	transaction, err := CreateTransaction(privKey, address)
+	transaction, err := CreateTransaction(wallet)
 	if err != nil {
 		fmt.Println(err)
 		return
