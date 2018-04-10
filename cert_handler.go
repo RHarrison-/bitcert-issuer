@@ -9,7 +9,7 @@ import (
 	"github.com/rharrison-/merkle"
 )
 
-// Certificate  ... __
+// Certificate ..
 type Certificate struct {
 	// structure of json output
 	Type      string            `json:"type,omitempty"`
@@ -19,6 +19,7 @@ type Certificate struct {
 	Signature *merkle.Signature `json:"signature,omitempty"`
 
 	// internal processing values
+	name  string
 	valid bool
 }
 
@@ -122,4 +123,18 @@ func loadCertificate(path string) *Certificate {
 	data, _ := ioutil.ReadFile(path)
 	_ = json.Unmarshal(data, &cert)
 	return &cert
+}
+
+type fileData struct {
+	Name string `json:"name"`
+	Path string `json:"path"`
+}
+
+func loadCertificates(files []fileData) {
+	for _, file := range files {
+		fmt.Println(file)
+		cert := loadCertificate(file.Path)
+		cert.name = file.Name
+		batch.add(cert)
+	}
 }

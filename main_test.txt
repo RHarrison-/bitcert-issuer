@@ -1,6 +1,8 @@
 package main
 
-import "testing"
+import (
+	"testing"
+)
 
 // func TestCertHandling(t *testing.T) {
 // 	cert := loadCertificate("/home/harrison/go/src/github.com/rharrison-/bitcert-issuer/example-certs/test_cert_unsigned.json")
@@ -16,9 +18,13 @@ import "testing"
 
 // 	net.connect()
 // 	// net.balance("mv62wDMoSYfiNUE5LsqY9DgN9kSagAK9vg")
-// 	net.UTXO("mv62wDMoSYfiNUE5LsqY9DgN9kSagAK9vg")
+// net.UTXO("mv62wDMoSYfiNUE5LsqY9DgN9kSagAK9vg")
 // }
 
 func TestTx(t *testing.T) {
+	net.connect()
+	importWallets("/home/harrison/go/src/github.com/rharrison-/bitcert-issuer/privKeys")
+
 	test()
+
 }
