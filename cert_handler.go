@@ -35,6 +35,7 @@ type internal struct {
 }
 
 type recipient struct {
+	Name     string `json:"name"`
 	Type     string `json:"type"`
 	Identity string `json:"identity"`
 	Hashed   bool   `json:"hashed"`
@@ -181,6 +182,8 @@ func loadCertificate(path string) *Certificate {
 	if err != nil {
 		log.Fatal(err)
 	}
+
+	fmt.Println(string(data))
 	_ = json.Unmarshal(data, &cert)
 	return &cert
 }
@@ -188,6 +191,8 @@ func loadCertificate(path string) *Certificate {
 func loadCertificates(files []fileData) {
 	for _, file := range files {
 		cert := loadCertificate(file.Path)
+
+		fmt.Println(cert)
 		splitPath := strings.Split(file.Path, "/")
 		internal := internal{
 			Path:   file.Path,
