@@ -5,9 +5,15 @@ import (
 	"encoding/json"
 	"fmt"
 	"io/ioutil"
+	"log"
+	"os"
+	"strings"
 
 	"github.com/rharrison-/merkle"
 )
+
+// get dynamically
+const root = "/home/harrison/go/src/github.com/rharrison-/bitcert-issuer"
 
 // Certificate ..
 type Certificate struct {
@@ -18,9 +24,14 @@ type Certificate struct {
 	Recipient recipient         `json:"recipient,omitempty"`
 	Signature *merkle.Signature `json:"signature,omitempty"`
 
-	// internal processing values
-	name  string
-	valid bool
+	Internal *internal `json:"internal,omitempty"`
+}
+
+type internal struct {
+	Name   string
+	Path   string
+	Valid  bool
+	Signed bool
 }
 
 type recipient struct {
@@ -62,7 +73,9 @@ type badgeSignature struct {
 
 // CalculateHash ... returns the hash of the certificates json string
 func (c Certificate) CalculateHash() []byte {
+	c.Internal = nil
 	hashable, _ := json.Marshal(c)
+	fmt.Println(string(hashable))
 	h := sha256.New()
 	h.Write(hashable)
 	return h.Sum(nil)
@@ -93,36 +106,68 @@ func (b Batch) toContentArray() []merkle.Content {
 	return content
 }
 
-func (b *Batch) test() {
+func (b Batch) attachProofs() {
 
 	tree, _ := merkle.NewTree(b.toContentArray())
-
 	tree.GenerateProofs()
+	batch = Batch{}
 
-	var c Certificate
-	a, _ := json.Marshal(tree.Leafs[0].C)
-	_ = json.Unmarshal(a, c)
-	c.Signature = &tree.Leafs[0].Proof
+	for _, leaf := range tree.Leafs {
+		if leaf.Dup {
+			continue
+		}
 
-	fmt.Println(merkle.VerifyProof(*c.Signature))
+		var cert Certificate
 
-}
+		CertificateData, _ := json.Marshal(leaf.C)
 
-func attachProof(n []merkle.Node) {
-	// for _, c := range b {
-	// 	content = append(content, c)
-	// }
+		_ = json.Unmarshal(CertificateData, &cert)
+
+		cert.Signature = &leaf.Proof
+
+		batch.add(&cert)
+	}
 }
 
 func (b *Batch) add(cert *Certificate) {
 	*b = append(*b, cert)
 }
 
-func loadCertificate(path string) *Certificate {
-	var cert Certificate
-	data, _ := ioutil.ReadFile(path)
-	_ = json.Unmarshal(data, &cert)
-	return &cert
+func (b *Batch) addAnchor(txHash string) {
+	for _, cert := range *b {
+		cert.Signature.Anchors = append(cert.Signature.Anchors, createAnchor(txHash))
+	}
+}
+
+func (b *Batch) save() {
+	for _, cert := range *b {
+		filename := cert.Internal.Name
+		cert.Internal = nil
+		jsonData, _ := json.Marshal(cert)
+
+		// create signed directory if not existing
+		if _, err := os.Stat(root + "/example-certs/signed"); os.IsNotExist(err) {
+			os.Mkdir(root+"/example-certs/signed", os.ModePerm)
+		}
+
+		err := ioutil.WriteFile(root+"/example-certs/signed/"+filename, jsonData, 0644)
+
+		if err != nil {
+			fmt.Println("----------------------------------")
+			fmt.Println("error saving signed cert")
+			fmt.Println(err)
+			fmt.Println(err.Error())
+			fmt.Println("----------------------------------")
+
+		}
+	}
+}
+
+func createAnchor(txHash string) merkle.Anchor {
+	return merkle.Anchor{
+		SourceID: txHash,
+		Type:     "BTCOpReturn",
+	}
 }
 
 type fileData struct {
@@ -130,11 +175,29 @@ type fileData struct {
 	Path string `json:"path"`
 }
 
+func loadCertificate(path string) *Certificate {
+	var cert Certificate
+	data, err := ioutil.ReadFile(path)
+	if err != nil {
+		log.Fatal(err)
+	}
+	_ = json.Unmarshal(data, &cert)
+	return &cert
+}
+
 func loadCertificates(files []fileData) {
 	for _, file := range files {
-		fmt.Println(file)
 		cert := loadCertificate(file.Path)
-		cert.name = file.Name
+		splitPath := strings.Split(file.Path, "/")
+		internal := internal{
+			Path:   file.Path,
+			Name:   splitPath[len(splitPath)-1],
+			Signed: cert.isSigned(),
+			Valid:  true,
+		}
+
+		cert.Internal = &internal
+
 		batch.add(cert)
 	}
 }

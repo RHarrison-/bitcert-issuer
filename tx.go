@@ -3,7 +3,6 @@ package main
 import (
 	"bytes"
 	"encoding/hex"
-	"fmt"
 	"log"
 
 	"github.com/d4l3k/go-electrum/electrum"
@@ -61,19 +60,16 @@ func (tx Transaction) addInput(UTXO electrum.Transaction) {
 
 // Sign signs the transaction and adds the scripts too the inputs and outputs
 func (tx Transaction) Sign(privKey string, destAddr string) {
-	fmt.Println("starting sign")
 	// decode WIF wallet privkey
 	wif, _ := btcutil.DecodeWIF(privKey)
 
 	// get the pub key for the given private key
-	fmt.Println(wif.PrivKey.PubKey().SerializeCompressed())
 	addresspubkey, _ := btcutil.NewAddressPubKey(wif.PrivKey.PubKey().SerializeCompressed(), &chaincfg.TestNet3Params)
+
 	// get sending address
 	sendingAddress, _ := btcutil.DecodeAddress(addresspubkey.EncodeAddress(), &chaincfg.TestNet3Params)
-
 	UTXOscript, _ := txscript.PayToAddrScript(sendingAddress)
 	tx.util.TxIn[0].SignatureScript, _ = txscript.SignatureScript(tx.util, 0, UTXOscript, txscript.SigHashAll, wif.PrivKey, true)
-	fmt.Println("done")
 }
 
 // todo(Reece)
@@ -90,8 +86,8 @@ func (tx Transaction) Sign(privKey string, destAddr string) {
 // 	}
 // }
 
-// Create a new transaction and return the final transaction hex ready to broadcast
-func CreateTransaction(wallet Wallet) (string, error) {
+// CreateTransaction Create a new transaction and return the final transaction hex ready to broadcast
+func CreateTransaction(wallet Wallet) (string, chainhash.Hash, error) {
 	var tx Transaction
 	tx.util = wire.NewMsgTx(wire.TxVersion)
 
@@ -101,24 +97,12 @@ func CreateTransaction(wallet Wallet) (string, error) {
 
 	tx.addInput(*utxoArray[0])
 	tx.addOutput(int64(outputAmount), wallet.address)
-
 	tx.Sign(wallet.key, wallet.address)
 
 	var signedTx bytes.Buffer
 	tx.util.Serialize(&signedTx)
+	transObject, _ := btcutil.NewTxFromBytes(signedTx.Bytes())
 	SignedTx := hex.EncodeToString(signedTx.Bytes())
 
-	return SignedTx, nil
-}
-
-func test() {
-	wallet, _ := getUsableWallet()
-
-	transaction, err := CreateTransaction(wallet)
-	if err != nil {
-		fmt.Println(err)
-		return
-	}
-
-	fmt.Println(transaction)
+	return SignedTx, *transObject.Hash(), nil
 }

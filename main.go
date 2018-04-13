@@ -9,7 +9,6 @@ import (
 	"github.com/pkg/errors"
 )
 
-
 // Vars
 var (
 	AppName string
@@ -22,6 +21,8 @@ func main() {
 	// Init
 	flag.Parse()
 	astilog.FlagInit()
+	importWallets("/home/harrison/go/src/github.com/rharrison-/bitcert-issuer/privKeys")
+	net.connect()
 
 	// Run bootstrap
 
@@ -33,8 +34,8 @@ func main() {
 			AppIconDarwinPath:  "resources/icon.icns",
 			AppIconDefaultPath: "resources/icon.png",
 		},
-		Debug:    *debug,
-		Homepage: "index.html",
+		Debug:          *debug,
+		Homepage:       "index.html",
 		MessageHandler: handleMessages, // message handler
 		RestoreAssets:  RestoreAssets,
 		WindowOptions: &astilectron.WindowOptions{
@@ -42,13 +43,12 @@ func main() {
 			Center:          astilectron.PtrBool(true),
 			Height:          astilectron.PtrInt(600),
 			Width:           astilectron.PtrInt(1000),
+			Frame:           astilectron.PtrBool(false),
 		},
 	}); err != nil {
 		astilog.Fatal(errors.Wrap(err, "running bootstrap failed"))
 	}
 }
-
-
 
 // MenuOptions: []*astilectron.MenuItemOptions{{
 // 	Label: astilectron.PtrStr("File"),
