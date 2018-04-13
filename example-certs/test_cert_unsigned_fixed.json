@@ -36,7 +36,17 @@
         "image": "",
         "id": "urn:uuid:82a4c9f2-3588-457b-80ea-da695571b8fc",
         "description": "A short description of the achievement.",
-
+        "signatureLines": [
+            {
+                "jobTitle": "University Issuer",
+                "name": "Your signature",
+                "type": [
+                    "SignatureLine",
+                    "Extension"
+                ],
+                "image": ""
+            }
+        ]
     },
-    "id": "urn:uuid:3bc1a96a-3501-46ed-8f75-49612bbac257",
+    "id": "urn:uuid:3bc1a96a-3501-46ed-8f75-49612bbac257"
 }
