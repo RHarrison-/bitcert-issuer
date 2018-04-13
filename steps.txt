@@ -1,0 +1,9 @@
+
+
+1. load certs
+
+2. verify certs 
+
+3. calculate merkle, edit certs
+
+4. broadcast tx

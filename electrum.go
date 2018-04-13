@@ -21,6 +21,8 @@ type Wallet struct {
 var Wallets []Wallet
 
 func importWallets(path string) {
+
+	fmt.Println("importing wallets")
 	inFile, _ := os.Open(path)
 	defer inFile.Close()
 	scanner := bufio.NewScanner(inFile)
@@ -43,12 +45,15 @@ func importWallets(path string) {
 
 func getUsableWallet() (Wallet, error) {
 	var wallet Wallet
+
 	for _, wallet := range Wallets {
 		balance := net.balance(wallet.address)
+
 		if balance.Confirmed > 3000 {
 			return wallet, nil
 		}
 	}
+
 	err := errors.New("no wallet with sufficient confirmed balance")
 	return wallet, err
 }
