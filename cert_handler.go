@@ -2,6 +2,7 @@ package main
 
 import (
 	"crypto/sha256"
+	"encoding/hex"
 	"encoding/json"
 	"fmt"
 	"io/ioutil"
@@ -35,21 +36,18 @@ type internal struct {
 }
 
 type recipient struct {
-	Name     string `json:"name"`
-	Type     string `json:"type"`
-	Identity string `json:"identity"`
-	Hashed   bool   `json:"hashed"`
+	Name  string `json:"name"`
+	Email string `json:"email"`
+	DOB   string `json:"dob"`
 }
 
 type badge struct {
-	ID             string         `json:"id"`
-	Name           string         `json:"name"`
-	Image          string         `json:"image"`
-	Issuer         issuer         `json:"issuer"`
-	Criteria       criteria       `json:"criteria"`
-	Description    string         `json:"description"`
-	SignatureLines badgeSignature `json:"signatureLines"`
-	Type           string         `json:"type"`
+	ID          string   `json:"id"`
+	Name        string   `json:"name"`
+	Image       string   `json:"image"`
+	Issuer      issuer   `json:"issuer"`
+	Criteria    criteria `json:"criteria"`
+	Description string   `json:"description"`
 }
 
 type issuer struct {
@@ -107,7 +105,7 @@ func (b Batch) toContentArray() []merkle.Content {
 	return content
 }
 
-func (b Batch) attachProofs() {
+func (b Batch) attachProofs() string {
 
 	tree, _ := merkle.NewTree(b.toContentArray())
 	tree.GenerateProofs()
@@ -128,6 +126,7 @@ func (b Batch) attachProofs() {
 
 		batch.add(&cert)
 	}
+	return hex.EncodeToString(tree.MerkleRoot)
 }
 
 func (b *Batch) add(cert *Certificate) {
@@ -154,12 +153,7 @@ func (b *Batch) save() {
 		err := ioutil.WriteFile(root+"/example-certs/signed/"+filename, jsonData, 0644)
 
 		if err != nil {
-			fmt.Println("----------------------------------")
-			fmt.Println("error saving signed cert")
 			fmt.Println(err)
-			fmt.Println(err.Error())
-			fmt.Println("----------------------------------")
-
 		}
 	}
 }
@@ -167,7 +161,7 @@ func (b *Batch) save() {
 func createAnchor(txHash string) merkle.Anchor {
 	return merkle.Anchor{
 		SourceID: txHash,
-		Type:     "BTCOpReturn",
+		Chain:    "bitcoinTestnet",
 	}
 }
 
@@ -178,6 +172,7 @@ type fileData struct {
 
 func loadCertificate(path string) *Certificate {
 	var cert Certificate
+
 	data, err := ioutil.ReadFile(path)
 	if err != nil {
 		log.Fatal(err)

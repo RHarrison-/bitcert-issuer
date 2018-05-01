@@ -1,0 +1,23 @@
+{
+    "issuedOn": "2018-03-26T09:33:47.490752+00:00",
+    "recipient": {
+        "name": "Reece Harrison",
+        "email": "reece@harrison.io"
+    },
+    "badge": {
+        "issuer": {
+            "url": "https://bitcert.harrison.io",
+            "name": "Reece Harrison",
+            "email": "reece@harrison.io",
+            "image": "",
+            "revocationList": "https://bitcert.harrison.io/revocation"
+        },
+        "name": "Certificate of Recognition",
+        "type": "BadgeClass",
+        "criteria": {
+            "narrative": "Recipient earnt this certificate of recognition by owning the domain harrison.io"
+        },
+        "image": "",
+        "description": "A short description of the achievement."
+    }
+}

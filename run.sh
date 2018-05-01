@@ -1,2 +1,2 @@
 astilectron-bundler bd -v 
-go run *.go -d
+go run *.go -testnet -d

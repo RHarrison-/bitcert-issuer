@@ -1,12 +1,8 @@
 package main
 
 import (
-	"bufio"
 	"errors"
-	"fmt"
 	"log"
-	"os"
-	"strings"
 
 	"github.com/d4l3k/go-electrum/electrum"
 )
@@ -20,25 +16,8 @@ type Wallet struct {
 // Wallets ...
 var Wallets []Wallet
 
-func importWallets(path string) {
-
-	fmt.Println("importing wallets")
-	inFile, _ := os.Open(path)
-	defer inFile.Close()
-	scanner := bufio.NewScanner(inFile)
-	scanner.Split(bufio.ScanLines)
-
-	for scanner.Scan() {
-		s := strings.Split(scanner.Text(), "	")
-		t := strings.Split(s[1], ":")
-		address := s[0]
-		privKey := t[1]
-
-		var wallet = Wallet{
-			address: address,
-			key:     privKey,
-		}
-
+func importWallets(wallets []Wallet) {
+	for _, wallet := range wallets {
 		Wallets = append(Wallets, wallet)
 	}
 }
@@ -64,12 +43,17 @@ type Network struct {
 	node *electrum.Node
 }
 
-var net = Network{
-	url: "testnet.hsmiths.com:53011", //electrum.anduck.net:50001
-}
+var net = Network{}
 
-func (n *Network) connect() {
-	fmt.Println("start connect")
+func (n *Network) connect(testnet bool) {
+	if testnet {
+		// testnet electrum url
+		n.url = "testnet.hsmiths.com:53011"
+	} else {
+		// testnet electrum url
+		n.url = "electrum.anduck.net:50001"
+	}
+
 	node := electrum.NewNode()
 	if err := node.ConnectTCP(n.url); err != nil {
 		log.Fatal(err)
@@ -91,4 +75,9 @@ func (n *Network) estimateFee(blocks int) int {
 func (n *Network) UTXO(address string) []*electrum.Transaction {
 	response, _ := n.node.BlockchainAddressListUnspent(address)
 	return response
+}
+
+func (n *Network) broadcast(raw string) interface{} {
+	result, _ := n.node.BlockchainTransactionBroadcast([]byte(raw))
+	return result
 }

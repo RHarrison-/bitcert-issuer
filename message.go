@@ -50,10 +50,10 @@ func handleMessages(_ *astilectron.Window, m bootstrap.MessageIn) (payload inter
 		unPack(m, &data)
 		batch = data
 
-		batch.attachProofs()
+		merkleRoot := batch.attachProofs()
 
 		wallet, _ := getUsableWallet()
-		txHex, txHash, _ := CreateTransaction(wallet)
+		txHex, txHash, _ := CreateTransaction(wallet, merkleRoot)
 		batch.addAnchor(txHash.String())
 
 		fmt.Println("new tx hash: ", txHash)
@@ -62,10 +62,8 @@ func handleMessages(_ *astilectron.Window, m bootstrap.MessageIn) (payload inter
 
 		fmt.Println(txHex)
 
-
-		// var i interface{} = txHex
-
-		// return i, nil
+		result := net.broadcast(txHex)
+		fmt.Println(result)
 
 		return batch, nil
 

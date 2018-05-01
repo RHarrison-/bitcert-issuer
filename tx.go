@@ -37,8 +37,11 @@ func (tx Transaction) addOutput(amount int64, address string) {
 	}
 	script, _ := txscript.PayToAddrScript(destinationAddress)
 	tx.util.AddTxOut(wire.NewTxOut(amount, script))
-	tx.util.AddTxOut(wire.NewTxOut(0, opReturnScript([]byte("another example"))))
+}
 
+// addOutput adds a new output to a bitcoin transaction
+func (tx Transaction) addData(merkleRoot string) {
+	tx.util.AddTxOut(wire.NewTxOut(0, opReturnScript([]byte(merkleRoot))))
 }
 
 func getUTXO(address string) []*electrum.Transaction {
@@ -87,7 +90,7 @@ func (tx Transaction) Sign(privKey string, destAddr string) {
 // }
 
 // CreateTransaction Create a new transaction and return the final transaction hex ready to broadcast
-func CreateTransaction(wallet Wallet) (string, chainhash.Hash, error) {
+func CreateTransaction(wallet Wallet, merkleRoot string) (string, chainhash.Hash, error) {
 	var tx Transaction
 	tx.util = wire.NewMsgTx(wire.TxVersion)
 
@@ -97,6 +100,7 @@ func CreateTransaction(wallet Wallet) (string, chainhash.Hash, error) {
 
 	tx.addInput(*utxoArray[0])
 	tx.addOutput(int64(outputAmount), wallet.address)
+	tx.addData(merkleRoot)
 	tx.Sign(wallet.key, wallet.address)
 
 	var signedTx bytes.Buffer
