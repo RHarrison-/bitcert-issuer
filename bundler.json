@@ -1,9 +1,12 @@
 {
-    "app_name": "bitcerts",
-    "icon_path_linux": "resources/icon.png",
-    "icon_path_windows": "resources/icon.ico",
-    "output_path": "output",
-    "environments": [
-      {"arch": "amd64", "os": "linux"}
-    ]
-  }
+  "app_name": "bitcerts",
+  "icon_path_linux": "resources/icon.png",
+  "icon_path_windows": "resources/icon.ico",
+  "output_path": "output",
+  "environments": [
+    {
+      "arch": "amd64",
+      "os": "linux"
+    }
+  ]
+}
